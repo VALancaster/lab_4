@@ -41,12 +41,12 @@ int main() {
     std::cout << "Target accuracy: 0.5e-6\n";
 
     // 1. Решение на основной сетке
-    SolverResult res1 = solve_main_seidel(p);
+    SolverResult res1 = solve_main_seidel_p3(p);
     
     // 2. Решение на измельченной сетке
     TaskParams p2 = p;
     p2.n *= 2; p2.m *= 2;
-    SolverResult res2 = solve_main_seidel(p2);
+    SolverResult res2 = solve_main_seidel_p3(p2);
 
     // 3. Расчет точности eps2
     double eps2 = 0.0;

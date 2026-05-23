@@ -45,12 +45,12 @@ int main() {
     std::cout << "Target accuracy: 0.5e-6\n\n";
 
     // 1. Решение на основной сетке
-    SolverResult res1 = solve_main_sor(p);
+    SolverResult res1 = solve_main_sor_p5(p);
     
     // 2. Решение на измельченной сетке (2n x 2m)
     TaskParams p2 = p;
     p2.n *= 2; p2.m *= 2;
-    SolverResult res2 = solve_main_sor(p2);
+    SolverResult res2 = solve_main_sor_p5(p2);
 
     // 3. Расчет точности решения основной задачи eps2
     double eps2 = 0.0;

@@ -1,13 +1,14 @@
-#ifndef SOLVER_H
-#define SOLVER_H
+#ifndef P2_SOLVER_H
+#define P2_SOLVER_H
 
 #include "poisson_base.h"
 #include <functional>
 #include <vector>
 
-class PoissonSolver {
+// ПЕРЕИМЕНОВАНО: PoissonSolver -> PoissonSolver_p2
+class PoissonSolver_p2 {
 public:
-    PoissonSolver(const TaskParams& config,
+    PoissonSolver_p2(const TaskParams& config,
                   std::function<double(double, double)> f_star,
                   std::function<double(double, double)> u_exact);
 
@@ -17,6 +18,9 @@ public:
 
     int get_iterations() const { return iterations_done; }
     double get_last_diff() const { return last_diff; }
+    
+    // ДОБАВЛЕНО ДЛЯ СЕРВЕРА
+    std::vector<double> get_v() const { return v; }
 
 private:
     TaskParams cfg;
@@ -32,4 +36,4 @@ private:
     inline int idx(int i, int j) const { return i * (cfg.m + 1) + j; }
 };
 
-#endif
+#endif // P2_SOLVER_H
