@@ -26,11 +26,11 @@ static double mu4(double x) {
     return std::pow(std::sin(2.0 * M_PI * x), 2);
 }
 
-SolverResult solve_main_sor(const TaskParams& p) {
+// ПЕРЕИМЕНОВАНО: Добавлен суффикс _p4
+SolverResult solve_main_sor_p4(const TaskParams& p) {
     Grid g(p);
     SolverResult res;
     
-    // Выделяем память. В Grid индекс: i * (m + 1) + j, значит размер (n+1)*(m+1)
     res.values.assign((p.n + 1) * (p.m + 1), 0.0);
     
     // 1. Установка граничных условий
@@ -43,7 +43,7 @@ SolverResult solve_main_sor(const TaskParams& p) {
         res.values[g.index(i, p.m)] = mu4(g.x(i));
     }
 
-    // 2. Начальное приближение (линейная интерполяция по направлению x через Utils)
+    // 2. Начальное приближение
     for (int j = 1; j < p.m; ++j) {
         double u_a = mu1(g.y(j));
         double u_b = mu2(g.y(j));
@@ -65,8 +65,6 @@ SolverResult solve_main_sor(const TaskParams& p) {
     
     do {
         max_diff = 0.0;
-        // Внешний цикл по i, внутренний по j для лучшего кэширования памяти 
-        // с учетом того, что index = i*(m+1)+j
         for (int i = 1; i < p.n; ++i) {
             double x = g.x(i);
             for (int j = 1; j < p.m; ++j) {
@@ -75,12 +73,10 @@ SolverResult solve_main_sor(const TaskParams& p) {
                 
                 double v_old = res.values[idx];
                 
-                // Значение по методу Гаусса-Зейделя
                 double sum_x = res.values[g.index(i - 1, j)] + res.values[g.index(i + 1, j)];
                 double sum_y = res.values[g.index(i, j - 1)] + res.values[g.index(i, j + 1)];
                 double v_gs = (A * sum_x + B * sum_y + f_func(x, y)) / C;
                 
-                // Релаксация
                 res.values[idx] = (1.0 - p.omega) * v_old + p.omega * v_gs;
                 
                 double diff = std::abs(res.values[idx] - v_old);
@@ -94,7 +90,7 @@ SolverResult solve_main_sor(const TaskParams& p) {
 
     res.iterations_done = iter;
 
-    // 5. Расчет нормы невязки (максимальная норма ||R||_inf)
+    // 5. Расчет нормы невязки
     double max_res = 0.0;
     for (int i = 1; i < p.n; ++i) {
         double x = g.x(i);
@@ -104,7 +100,6 @@ SolverResult solve_main_sor(const TaskParams& p) {
             double sum_y = res.values[g.index(i, j - 1)] + res.values[g.index(i, j + 1)];
             double current = res.values[g.index(i, j)];
             
-            // R = - ( \Delta_h v + f )
             double r_ij = std::abs((A * sum_x + B * sum_y - C * current) + f_func(x, y));
             if (r_ij > max_res) {
                 max_res = r_ij;

@@ -1,9 +1,9 @@
-#ifndef SOLVER_H
-#define SOLVER_H
+#ifndef P5_SOLVER_H
+#define P5_SOLVER_H
 
 #include "poisson_base.h"
 
-// Функция решения основной задачи методом верхней релаксации (МВР)
-SolverResult solve_main_sor(TaskParams params);
+// ПЕРЕИМЕНОВАНО: solve_main_sor -> solve_main_sor_p5
+SolverResult solve_main_sor_p5(TaskParams params);
 
-#endif // SOLVER_H
+#endif // P5_SOLVER_H

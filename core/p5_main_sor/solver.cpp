@@ -20,7 +20,7 @@ namespace {
     double mu4(double x) { return std::pow(std::sin(2.0 * PI * x), 2); }
 }
 
-SolverResult solve_main_sor(TaskParams params) {
+SolverResult solve_main_sor_p5(TaskParams params) {
     Grid grid(params);
     int N_total = (params.n + 1) * (params.m + 1);
     std::vector<double> v(N_total, 0.0);

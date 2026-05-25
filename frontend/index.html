@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Лаб 4 - Уравнение Пуассона</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f0f2f5; color: #333; }
+        h1 { text-align: center; color: #2c3e50; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; }
+        .controls { background: white; padding: 25px; border-radius: 10px; width: 320px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height: fit-content; }
+        .controls label { font-weight: bold; margin-top: 10px; display: block; font-size: 14px; }
+        .controls input, .controls select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; margin-top: 20px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .btn:hover { background: #0056b3; }
+        .visuals { flex-grow: 1; display: flex; flex-direction: column; gap: 20px; min-width: 600px; }
+        .chart { background: white; border-radius: 10px; height: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 10px; }
+        .stats { margin-top: 25px; padding: 15px; background: #e9ecef; border-radius: 8px; font-size: 15px; border-left: 5px solid #007bff; }
+        .stats span { font-weight: bold; color: #d9534f; }
+        .table-wrap { background: white; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #dee2e6; padding: 8px; text-align: center; font-size: 13px; }
+        th { background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+
+<h1>Задача Дирихле (Вариант 7)</h1>
+
+<div class="container">
+    <div class="controls">
+        <h3 style="margin-top:0;">Параметры задачи</h3>
+        <label>Исполнитель:</label>
+        <select id="userMode">
+            <option value="1">1. Тестовая (Зейдель)</option>
+            <option value="2">2. Тестовая (МВР)</option>
+            <option value="3" selected>3. Основная (Зейдель)</option>
+            <option value="4">4. Основная (МВР)</option>
+            <option value="5">5. Основная (МВР)</option>
+        </select>
+
+        <label>Сетка N (ось X):</label>
+        <input type="number" id="valN" value="40">
+        
+        <label>Сетка M (ось Y):</label>
+        <input type="number" id="valM" value="40">
+
+        <label>Точность (eps_met):</label>
+        <input type="text" id="valEps" value="1e-6">
+
+        <label>Параметр МВР (ω):</label>
+        <input type="number" step="0.1" id="valOmega" value="1.0">
+
+        <button class="btn" onclick="runCalculation()" id="calcBtn">Рассчитать</button>
+
+        <div class="stats" id="statBlock">
+            <div style="margin-bottom:8px;">Итераций (N): <span id="resIter">-</span></div>
+            <div style="margin-bottom:8px;">Невязка ||R||: <span id="resResid">-</span></div>
+            <div>Погрешность (ε): <span id="resErr">-</span></div>
+        </div>
+    </div>
+
+    <div class="visuals">
+        <div id="plotSolution" class="chart"></div>
+        <div id="plotError" class="chart"></div>
+    </div>
+</div>
+
+<div class="table-wrap" id="tableContainer">
+    <h3 style="margin-top:0;">Фрагмент таблицы значений v(x,y)</h3>
+    <div id="tableContent">Таблица появится после расчета...</div>
+</div>
+
+<script>
+async function runCalculation() {
+    const btn = document.getElementById('calcBtn');
+    btn.innerText = "Считаю..."; btn.style.background = "#6c757d";
+
+    const params = new URLSearchParams({
+        id: document.getElementById('userMode').value,
+        n: document.getElementById('valN').value,
+        m: document.getElementById('valM').value,
+        eps: document.getElementById('valEps').value,
+        omega: document.getElementById('valOmega').value
+    });
+
+    try {
+        const response = await fetch(`/solve?${params}`);
+        const data = await response.json();
+
+        // 1. Статистика
+        document.getElementById('resIter').innerText = data.iterations;
+        document.getElementById('resResid').innerText = data.residual.toExponential(4);
+        document.getElementById('resErr').innerText = data.error.toExponential(4);
+
+        // 2. Формируем 2D массивы для Plotly
+        const zSol = [], zErr = [];
+        const xVals = [], yVals = [];
+        
+        for (let i = 0; i <= data.n; i++) xVals.push((i / data.n * 2.0).toFixed(2));
+        for (let j = 0; j <= data.m; j++) yVals.push((j / data.m * 1.0).toFixed(2));
+
+        for (let j = 0; j <= data.m; j++) {
+            const rowSol = [], rowErr = [];
+            for (let i = 0; i <= data.n; i++) {
+                rowSol.push(data.values[i * (data.m + 1) + j]);
+                rowErr.push(data.diff[i * (data.m + 1) + j]);
+            }
+            zSol.push(rowSol);
+            zErr.push(rowErr);
+        }
+
+        // 3. Рисуем графики
+        const layoutSol = { title: 'Численное решение v(x,y)', scene: { xaxis: {title: 'X'}, yaxis: {title: 'Y'}, zaxis: {title: 'V'} } };
+        Plotly.newPlot('plotSolution', [{ z: zSol, x: xVals, y: yVals, type: 'surface', colorscale: 'Viridis' }], layoutSol);
+
+        const layoutErr = { title: 'Погрешность / Разность сеток', scene: { xaxis: {title: 'X'}, yaxis: {title: 'Y'}, zaxis: {title: 'Error'} } };
+        Plotly.newPlot('plotError', [{ z: zErr, x: xVals, y: yVals, type: 'surface', colorscale: 'Reds' }], layoutErr);
+
+        // 4. Таблица (выводим каждый 5-й узел, чтобы не перегружать экран)
+        let stepX = Math.max(1, Math.floor(data.n / 10));
+        let stepY = Math.max(1, Math.floor(data.m / 10));
+        
+        let tableHtml = '<table><tr><th>Y \\ X</th>';
+        for(let i=0; i<=data.n; i+=stepX) tableHtml += `<th>${xVals[i]}</th>`;
+        tableHtml += '</tr>';
+
+        for(let j=data.m; j>=0; j-=stepY) {
+            tableHtml += `<tr><td><strong>${yVals[j]}</strong></td>`;
+            for(let i=0; i<=data.n; i+=stepX) {
+                tableHtml += `<td>${data.values[i*(data.m+1)+j].toFixed(5)}</td>`;
+            }
+            tableHtml += '</tr>';
+        }
+        tableHtml += '</table>';
+        document.getElementById('tableContent').innerHTML = tableHtml;
+
+    } catch (e) {
+        alert("Ошибка связи с сервером! Проверьте консоль.");
+        console.error(e);
+    }
+
+    btn.innerText = "Рассчитать"; btn.style.background = "#007bff";
+}
+</script>
+</body>
+</html>

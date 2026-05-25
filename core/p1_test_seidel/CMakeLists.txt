@@ -1,11 +1,13 @@
-cmake_minimum_required(VERSION 3.10)
-project(DirichletPoissonTBB)
+add_library(p1_test_seidel_lib 
+    main.cpp 
+    solver.cpp
+)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+target_include_directories(p1_test_seidel_lib PRIVATE
+    ${CMAKE_SOURCE_DIR}/shared
+)
 
-# Ищем Intel TBB
-find_package(TBB REQUIRED)
-
-add_executable(solver_app main.cpp solver.cpp)
-target_link_libraries(solver_app PRIVATE TBB::tbb)
+target_link_libraries(p1_test_seidel_lib PRIVATE 
+    shared
+    $<$<PLATFORM_ID:Linux,Darwin>:m>
+)

@@ -1,9 +1,9 @@
-#ifndef SOLVER_H
-#define SOLVER_H
+#ifndef P4_SOLVER_H
+#define P4_SOLVER_H
 
 #include "poisson_base.h"
 
-// Функция решения основной задачи методом МВР (SOR)
-SolverResult solve_main_sor(const TaskParams& p);
+// ПЕРЕИМЕНОВАНО: Добавлен суффикс _p4
+SolverResult solve_main_sor_p4(const TaskParams& p);
 
-#endif // SOLVER_H
+#endif // P4_SOLVER_H
