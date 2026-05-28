@@ -165,8 +165,9 @@ async function runCalculation() {
         };
 
         createPlot('chartV', data.v, 'Численное решение V', 'Viridis');
-        createPlot('chartU', data.u, data.type==="main" ? 'Уплотненная сетка V2' : 'Точное решение U*', 'Cividis');
-        createPlot('chartE', data.e, 'Разность |V - U|', 'Reds');
+        createPlot('chartU', data.u, data.type === "main" ? 'Уплотненная сетка V2' : 'Точное решение U*', 'Cividis');
+        // ТЕПЕРЬ ЗАГОЛОВОК ТРЕТЬЕГО ГРАФИКА ТОЖЕ МЕНЯЕТСЯ:
+        createPlot('chartE', data.e, data.type === "main" ? 'Разность |V - V2|' : 'Погрешность |V - U*|', 'Reds');
 
         // 3. ТАБЛИЦЫ
         if (data.type === "main") {
